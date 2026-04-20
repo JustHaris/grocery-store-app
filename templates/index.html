@@ -47,7 +47,7 @@
             <div class="hero-slide active">
                 <img src="{{ url_for('static', filename='images/grocery_banner1.jpg') }}" alt="Promo 1" loading="lazy">
                 <div class="hero-overlay" style="background: linear-gradient(to right, rgba(15,23,42,0.9), rgba(15,23,42,0.2));">
-                    <div class="hero-content text-white">
+                    <div class="hero-content">
                         <span class="badge bg-accent text-dark mb-3">Fresh Arrivals</span>
                         <h2 class="display-4 fw-bold mb-3">Premium Organic <br> Selection</h2>
                         <p class="text-secondary mb-4">Directly from the finest local farms to your kitchen.</p>
@@ -58,7 +58,7 @@
             <div class="hero-slide">
                 <img src="{{ url_for('static', filename='images/grocery_banner2.jpg') }}" alt="Promo 2" loading="lazy">
                 <div class="hero-overlay" style="background: linear-gradient(to right, rgba(15,23,42,0.9), rgba(15,23,42,0.2));">
-                    <div class="hero-content text-white">
+                    <div class="hero-content">
                         <span class="badge bg-info text-dark mb-3">Flash Sale</span>
                         <h2 class="display-4 fw-bold mb-3">Weekly Deals <br> Up to 40% OFF</h2>
                         <p class="text-secondary mb-4">Limited time offer on all dairy and bakery items.</p>
@@ -135,7 +135,7 @@
                 <div class="p-4">
                     <div class="text-muted small mb-1">{{ product.category.name if product.category else 'General' }}</div>
                     <h6 class="fw-bold mb-2 text-truncate" title="{{ product.name }}">
-                        <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="text-decoration-none text-primary">{{ product.name }}</a>
+                        <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="text-decoration-none text-white">{{ product.name }}</a>
                     </h6>
                     
                     <div class="d-flex align-items-baseline gap-2 mb-3">
@@ -146,9 +146,15 @@
                     </div>
 
                     <div class="d-grid">
-                        <button type="button" class="btn btn-dash-outline w-100 py-2" onclick="addToCart({{ product.product_id }})" {% if product.stock <= 0 %}disabled{% endif %}>
-                            <i class="bi bi-cart-plus me-2"></i>{% if product.stock > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
-                        </button>
+                        <form action="{{ url_for('main.add_to_cart', product_id=product.product_id) }}" method="POST">
+                            <button type="submit" class="btn btn-dash-outline w-100 py-2" {% if product.stock <= 0 %}disabled{% endif %}>
+                                {% if product.stock <= 0 %}
+                                Out of Stock
+                                {% else %}
+                                <i class="bi bi-plus-lg me-1"></i> Add to Cart
+                                {% endif %}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

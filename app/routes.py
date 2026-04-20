@@ -3,21 +3,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.models import User, Category, Product, Order, OrderItem, Wishlist, Supplier
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
-from functools import wraps
 
 main_bp = Blueprint('main', __name__)
-
-# --- Decorators ---
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session.get('role') != 'Admin':
-            flash('Admin access required.', 'danger')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
 
 # --- Authentication ---
 @main_bp.route('/login', methods=['GET', 'POST'])
@@ -97,8 +84,7 @@ def index():
     else:
         query = query.order_by(Product.name.asc())
 
-    # OPTIMIZATION: Avoid N+1 queries by eager loading the category
-    products = query.options(joinedload(Product.category)).all()
+    products = query.all()
     categories = Category.query.all()
     return render_template('index.html', products=products, categories=categories)
 
@@ -143,52 +129,14 @@ def add_to_cart(product_id):
     if 'user_id' not in session:
         return redirect(url_for('main.login'))
         
-    product = Product.query.get_or_404(product_id)
-    quantity = int(request.form.get('quantity', 1))
-    
     cart = session.get('cart', {})
     pid = str(product_id)
-    
-    current_qty = cart.get(pid, 0)
-    if current_qty + quantity > product.stock:
-        flash(f'Cannot add {quantity} item(s). Only {product.stock} in stock.', 'danger')
-        return redirect(request.referrer or url_for('main.index'))
-        
-    cart[pid] = current_qty + quantity
+    cart[pid] = cart.get(pid, 0) + 1
     session['cart'] = cart
     session.modified = True
     
     flash('Item added to cart', 'success')
     return redirect(request.referrer or url_for('main.index'))
-
-@main_bp.route('/api/add_to_cart/<int:product_id>', methods=['POST'])
-def api_add_to_cart(product_id):
-    """AJAX endpoint for seamless Add to Cart"""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'redirect': url_for('main.login')}), 401
-        
-    product = Product.query.get_or_404(product_id)
-    
-    if request.is_json:
-        quantity = int(request.json.get('quantity', 1))
-    else:
-        quantity = int(request.form.get('quantity', 1))
-    
-    cart = session.get('cart', {})
-    pid = str(product_id)
-    
-    current_qty = cart.get(pid, 0)
-    if current_qty + quantity > product.stock:
-        return jsonify({'success': False, 'message': f'Only {product.stock} in stock.'}), 400
-        
-    cart[pid] = current_qty + quantity
-    session['cart'] = cart
-    session.modified = True
-    
-    total_items = sum(cart.values())
-    
-    return jsonify({'success': True, 'message': 'Added to cart!', 'total_items': total_items})
-
 
 @main_bp.route('/update_cart/<int:product_id>', methods=['POST'])
 def update_cart(product_id):
@@ -352,31 +300,20 @@ def remove_from_wishlist(wishlist_id):
 
 # --- Admin Routes ---
 @main_bp.route('/admin')
-@admin_required
 def admin_panel():
+    if session.get('role') != 'Admin':
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('main.index'))
+        
     products = Product.query.all()
     categories = Category.query.all()
-    # Simple analytics
-    total_sales = db.session.query(func.sum(Order.total_amount)).filter(Order.status != 'Cancelled').scalar() or 0
-    total_orders = Order.query.count()
-    total_products = Product.query.count()
-    low_stock_products = Product.query.filter(Product.stock <= 10).all()
-    
-    # Category Distribution for Chart
-    cat_dist = db.session.query(Category.name, func.count(Product.product_id)).join(Product).group_by(Category.name).all()
-    
-    return render_template('admin.html', 
-                           products=products, 
-                           categories=categories,
-                           revenue=total_sales, 
-                           orders=total_orders, 
-                           products_count=total_products, 
-                           low_stock=low_stock_products,
-                           cat_dist=cat_dist)
+    return render_template('admin.html', products=products, categories=categories)
 
 @main_bp.route('/admin/dashboard')
-@admin_required
 def admin_dashboard():
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     total_revenue = db.session.query(func.sum(Order.total_amount)).filter(Order.status != 'Cancelled').scalar() or 0
     total_orders = Order.query.count()
     total_products = Product.query.count()
@@ -394,8 +331,10 @@ def admin_dashboard():
 
 
 @main_bp.route('/admin/add_product', methods=['POST'])
-@admin_required
 def add_product():
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     name = request.form['name']
     price = request.form['price']
     stock = request.form['stock']
@@ -416,8 +355,10 @@ def add_product():
     return redirect(url_for('main.admin_panel'))
 
 @main_bp.route('/admin/edit_product/<int:product_id>', methods=['POST'])
-@admin_required
 def edit_product(product_id):
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     product = Product.query.get_or_404(product_id)
     product.name = request.form['name']
     product.price = request.form['price']
@@ -431,8 +372,10 @@ def edit_product(product_id):
     return redirect(url_for('main.admin_panel'))
 
 @main_bp.route('/admin/delete_product/<int:product_id>', methods=['POST'])
-@admin_required
 def delete_product(product_id):
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     product = Product.query.get_or_404(product_id)
     # Check if product is in any orders to maintain referential integrity
     # (Though DB has constraints, it's good to catch it here)
@@ -448,14 +391,18 @@ def delete_product(product_id):
 
 
 @main_bp.route('/suppliers')
-@admin_required
 def suppliers():
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+    
     supplier_list = Supplier.query.all()
     return render_template('suppliers.html', suppliers=supplier_list)
 
 @main_bp.route('/admin/add_supplier', methods=['POST'])
-@admin_required
 def add_supplier():
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+    
     name = request.form['name']
     contact_person = request.form.get('contact_person')
     category = request.form.get('category')
@@ -476,8 +423,10 @@ def add_supplier():
     return redirect(url_for('main.suppliers'))
 
 @main_bp.route('/admin/edit_supplier/<int:supplier_id>', methods=['POST'])
-@admin_required
 def edit_supplier(supplier_id):
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     supplier = Supplier.query.get_or_404(supplier_id)
     supplier.name = request.form['name']
     supplier.contact_person = request.form.get('contact_person')
@@ -491,8 +440,10 @@ def edit_supplier(supplier_id):
     return redirect(url_for('main.suppliers'))
 
 @main_bp.route('/admin/delete_supplier/<int:supplier_id>', methods=['POST'])
-@admin_required
 def delete_supplier(supplier_id):
+    if session.get('role') != 'Admin':
+        return redirect(url_for('main.index'))
+        
     supplier = Supplier.query.get_or_404(supplier_id)
     db.session.delete(supplier)
     db.session.commit()

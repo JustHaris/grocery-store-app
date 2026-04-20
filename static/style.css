@@ -15,7 +15,6 @@
     --header-height: 70px;
     --glass: blur(12px) saturate(180%);
     --noise: url('https://grainy-gradients.vercel.app/noise.svg');
-    --btn-text: #ffffff;
 }
 
 [data-theme="light"] {
@@ -29,7 +28,6 @@
     --accent: #16a34a;
     --accent-glow: rgba(22, 163, 74, 0.1);
     --border: #e2e8f0;
-    --btn-text: #ffffff;
 }
 
 * {
@@ -194,6 +192,7 @@ body {
     flex: 1;
     margin-left: var(--sidebar-width);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: var(--header-height);
 }
 
 .dash-sidebar.collapsed + .dash-main {
@@ -203,9 +202,10 @@ body {
 /* Top Header */
 .dash-header {
     height: var(--header-height);
-    position: sticky;
+    position: fixed;
     top: 0;
-    width: 100%;
+    right: 0;
+    left: var(--sidebar-width);
     background: var(--header-bg);
     backdrop-filter: var(--glass);
     border-bottom: 1px solid var(--border);
@@ -214,10 +214,11 @@ body {
     justify-content: space-between;
     padding: 0 2rem;
     z-index: 999;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dash-sidebar.collapsed + .dash-main .dash-header {
-    /* No adjustments needed when sticky and 100% width */
+    left: var(--sidebar-collapsed);
 }
 
 /* Dashboard Cards */
@@ -359,7 +360,7 @@ body {
 /* Premium Buttons */
 .btn-dash {
     background: var(--accent);
-    color: var(--btn-text);
+    color: #fff;
     border: none;
     border-radius: 12px;
     padding: 0.6rem 1.2rem;
@@ -380,7 +381,7 @@ body {
 
 .btn-dash-outline:hover:not(:disabled) {
     background: var(--accent);
-    color: var(--btn-text);
+    color: #fff;
     box-shadow: 0 5px 15px var(--accent-glow);
 }
 
@@ -394,7 +395,7 @@ body {
     background: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    color: #fff;
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -531,10 +532,6 @@ body {
 /* Text Visibility Classes */
 .text-muted {
     color: var(--text-secondary) !important;
-}
-
-.text-accent {
-    color: var(--accent) !important;
 }
 
 /* Theme Specific Tweaks */

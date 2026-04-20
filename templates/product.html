@@ -67,9 +67,11 @@
             </div>
 
             <div class="d-grid gap-3">
-                <button type="button" class="btn btn-dash w-100 py-3 rounded-3 shadow-lg" onclick="addToCart({{ product.product_id }})" {% if product.stock <= 0 %}disabled{% endif %}>
-                    <i class="bi bi-cart-plus-fill me-2"></i> Add to Procurement Cart
-                </button>
+                <form action="{{ url_for('main.add_to_cart', product_id=product.product_id) }}" method="POST">
+                    <button type="submit" class="btn btn-dash w-100 py-3 rounded-3 shadow-lg" {% if product.stock <= 0 %}disabled{% endif %}>
+                        <i class="bi bi-cart-plus-fill me-2"></i> Add to Procurement Cart
+                    </button>
+                </form>
                 <div class="p-3 bg-secondary bg-opacity-10 rounded-3 small text-muted border border-secondary text-center">
                     <i class="bi bi-shield-check me-2 text-success"></i> Quality Guaranteed & ACID Transaction Secure
                 </div>
@@ -98,11 +100,13 @@
                     </div>
                 </a>
                 <div class="p-4">
-                    <h6 class="fw-bold mb-2 text-truncate text-primary">{{ rel.name }}</h6>
+                    <h6 class="fw-bold mb-2 text-truncate text-white">{{ rel.name }}</h6>
                     <div class="text-accent fw-bold mb-3">Rs. {{ "%.2f"|format(rel.price) }}</div>
-                        <button type="button" class="btn btn-sm btn-dash-outline w-100" onclick="addToCart({{ rel.product_id }})" {% if rel.stock <= 0 %}disabled{% endif %}>
-                            {% if rel.stock > 0 %}<i class="bi bi-cart-plus"></i> Add{% else %}Out of Stock{% endif %}
+                    <form action="{{ url_for('main.add_to_cart', product_id=rel.product_id) }}" method="POST">
+                        <button type="submit" class="btn btn-dash-outline w-100 py-2 btn-sm" {% if rel.stock <= 0 %}disabled{% endif %}>
+                            Add to Cart
                         </button>
+                    </form>
                 </div>
             </div>
         </div>
