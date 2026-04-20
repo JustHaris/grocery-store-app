@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Orders Header -->
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-up">
+    <div>
+        <h2 class="fw-bold mb-1">Procurement History</h2>
+        <p class="text-muted mb-0">Review your past grocery orders and current statuses.</p>
+    </div>
+    <a href="{{ url_for('main.index') }}" class="btn btn-dash-outline">
+        <i class="bi bi-shop me-2"></i> Continue Shopping
+    </a>
+</div>
+
+<!-- Orders Table -->
+<div class="dash-card p-0 overflow-hidden" data-aos="fade-up">
+    <div class="table-responsive">
+        <table class="table dash-table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Reference ID</th>
+                    <th>Date & Time</th>
+                    <th>Fulfillment Status</th>
+                    <th>Investment (PKR)</th>
+                    <th class="pe-4 text-end">Documentation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-accent">#ORD-{{ order.order_id }}</div>
+                        <div class="small text-muted">{{ order.items|length }} items included</div>
+                    </td>
+                    <td>{{ order.order_date.strftime('%b %d, %Y | %H:%M') }}</td>
+                    <td>
+                        {% if order.status == 'Delivered' %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+                            <i class="bi bi-check-circle-fill me-1"></i> Delivered
+                        </span>
+                        {% elif order.status == 'Processing' %}
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill">
+                            <i class="bi bi-gear-fill me-1"></i> Processing
+                        </span>
+                        {% else %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill">
+                            <i class="bi bi-clock-fill me-1"></i> {{ order.status }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-accent">Rs. {{ "%.2f"|format(order.total_amount) }}</td>
+                    <td class="pe-4 text-end">
+                        <a href="{{ url_for('main.view_invoice', order_id=order.order_id) }}" class="btn btn-sm btn-dash px-3">
+                            <i class="bi bi-receipt me-1"></i> Invoice
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="p-5">
+                            <i class="bi bi-receipt display-1 text-muted opacity-25"></i>
+                            <h4 class="mt-4 text-muted">No orders found yet</h4>
+                            <p class="text-secondary">Your fulfilled purchases will appear here.</p>
+                            <a href="{{ url_for('main.index') }}" class="btn btn-dash rounded-pill px-4 mt-3">Start Procuring</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

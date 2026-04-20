@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GroceryStore — Premium Grocery Marketplace powered by Flask and MS SQL Server.">
+    <title>GroceryStore Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}?v={{ range(1, 99999)|random }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="dash-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside id="main-sidebar" class="dash-sidebar">
+            <div class="sidebar-logo">
+                <a href="{{ url_for('main.index') }}" class="d-flex align-items-center text-decoration-none" style="color: var(--accent); flex: 1; overflow: hidden; white-space: nowrap;">
+                    <i class="bi bi-shop-window me-3 flex-shrink-0"></i>
+                    <span>GroceryStore</span>
+                </a>
+                <!-- Mobile Close Button (only visible on small screens) -->
+                <button class="sidebar-close-btn d-lg-none" onclick="toggleSidebar()" aria-label="Close menu">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('main.index') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.index' }}">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Marketplace</span>
+                </a>
+                
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('main.view_cart') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.view_cart' }}">
+                    <i class="bi bi-cart3"></i>
+                    <span>Checkout Cart</span>
+                </a>
+                <a href="{{ url_for('main.wishlist') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.wishlist' }}">
+                    <i class="bi bi-heart"></i>
+                    <span>My Wishlist</span>
+                </a>
+                <a href="{{ url_for('main.orders') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.orders' }}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Order History</span>
+                </a>
+                
+                {% if session.get('role') == 'Admin' %}
+                <div class="sidebar-section-label px-4 py-2 mt-4 text-muted small text-uppercase fw-bold">Management</div>
+                <a href="{{ url_for('main.admin_dashboard') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.admin_dashboard' }}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{{ url_for('main.admin_panel') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.admin_panel' }}">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="{{ url_for('main.suppliers') }}" class="nav-link-item {{ 'active' if request.endpoint == 'main.suppliers' }}">
+                    <i class="bi bi-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                {% endif %}
+
+                {% endif %}
+            </nav>
+            
+            <div class="p-3 border-top border-secondary">
+                {% if session.get('user_id') %}
+                <div class="d-flex align-items-center px-3 mb-3">
+                    <div class="bg-primary rounded-circle p-2 me-3 flex-shrink-0" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white fw-bold">{{ session.get('username')[0]|upper }}</span>
+                    </div>
+                    <div class="text-truncate sidebar-user-info">
+                        <div class="small fw-bold">{{ session.get('username') }}</div>
+                        <div class="text-muted small">{{ session.get('role') }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('main.logout') }}" class="nav-link-item text-danger">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Sign Out</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.login') }}" class="nav-link-item">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Sign In</span>
+                </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Area -->
+        <main class="dash-main">
+            <!-- Header -->
+            <header class="dash-header">
+                <div class="d-flex align-items-center">
+                    <button id="sidebar-toggle" class="btn btn-link p-0 me-3" onclick="toggleSidebar()">
+                        <i class="bi bi-list fs-3" style="color: var(--text-primary);"></i>
+                    </button>
+                    <h5 class="mb-0 fw-bold d-none d-md-block">Dashboard Overview</h5>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <button id="theme-toggle" class="theme-switch" onclick="toggleTheme()">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                    
+                    {% if session.get('user_id') %}
+                    <a href="{{ url_for('main.view_cart') }}" class="position-relative p-2" style="color: var(--text-primary);">
+                        <i class="bi bi-cart fs-5"></i>
+                        {% if session.get('cart') %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                            {{ session.get('cart')|length }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="container-fluid p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert">
+                        <i class="bi {{ 'bi-check-circle' if category == 'success' else 'bi-exclamation-triangle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="btn btn-dash rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 d-none" style="width: 50px; height: 50px; z-index: 1050;">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Global Toast Notification Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+        <div id="liveToast" class="toast align-items-center text-bg-success border-0 rounded-4 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                    <span id="toastMessage">Action successful!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Theme on load to prevent flicker
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='main.js') }}?v={{ range(1, 99999)|random }}"></script>
+</body>
+</html>
+
+
+
+

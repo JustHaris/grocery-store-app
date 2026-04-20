@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="error-container">
+    <div class="error-code glow-text">404</div>
+    <h1 class="mb-4">Oops! Page Lost in the Aisles</h1>
+    <p class="lead text-muted mb-5">We couldn't find the page you're looking for. Maybe it's out of stock?</p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-lg glow-btn text-white px-5 rounded-pill">Back to Home</a>
+        <a href="javascript:history.back()" class="btn btn-lg btn-outline-secondary px-5 rounded-pill">Go Back</a>
+    </div>
+</div>
+{% endblock %}

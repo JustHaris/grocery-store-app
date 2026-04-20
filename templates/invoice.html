@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.order_id }} - GroceryStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --accent: #00a86b;
+        }
+        body {
+            background: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+        }
+        .invoice-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 60px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+        .invoice-header {
+            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        .brand-text {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: none;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: #888;
+            padding: 15px;
+        }
+        .table tbody td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+        @media print {
+            body { background: #fff; margin: 0; }
+            .invoice-container { margin: 0; box-shadow: none; width: 100%; max-width: 100%; padding: 40px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print text-center mt-4">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill px-4 me-2">
+            <i class="bi bi-arrow-left me-2"></i> Back
+        </a>
+        <button onclick="window.print()" class="btn btn-dash rounded-pill px-4" style="background: var(--accent); color: white; border: none;">
+            <i class="bi bi-printer me-2"></i> Print Invoice
+        </button>
+    </div>
+
+    <div class="invoice-container">
+        <div class="invoice-header d-flex justify-content-between align-items-center">
+            <div>
+                <div class="brand-text mb-1"><i class="bi bi-shop-window me-2"></i>GroceryStore</div>
+                <div class="text-muted small">Premium Procurement Services</div>
+            </div>
+            <div class="text-end">
+                <h4 class="fw-bold mb-0">INVOICE</h4>
+                <div class="text-muted small">#ORD-{{ order.order_id }}</div>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-6">
+                <div class="small text-muted text-uppercase fw-bold mb-2">Billed To:</div>
+                <h6 class="fw-bold mb-1">{{ order.user.username }}</h6>
+                <div class="text-muted small">{{ order.user.email }}</div>
+            </div>
+            <div class="col-6 text-end">
+                <div class="small text-muted text-uppercase fw-bold mb-2">Date Issued:</div>
+                <h6 class="fw-bold mb-1">{{ order.order_date.strftime('%B %d, %Y') }}</h6>
+                <div class="text-muted small">Time: {{ order.order_date.strftime('%H:%M') }}</div>
+            </div>
+        </div>
+
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ item.product.name if item.product else 'Unknown Product' }}</div>
+                        <div class="text-muted small">{{ item.product.category.name if item.product and item.product.category else 'General' }}</div>
+                    </td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-end">Rs. {{ "%.2f"|format(item.price) }}</td>
+                    <td class="text-end fw-bold">Rs. {{ "%.2f"|format(item.quantity * item.price) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <div class="total-section">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-semibold">Rs. {{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tax (0%)</span>
+                        <span class="fw-semibold">Rs. 0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold h5 mb-0">Total Amount</span>
+                        <span class="fw-bold h5 mb-0 text-accent" style="color: var(--accent);">Rs. {{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 pt-5 border-top border-secondary border-opacity-10 text-center text-muted small">
+            <p class="mb-1">Thank you for choosing GroceryStore for your daily essentials.</p>
+            <p class="mb-0">This is a system-generated invoice valid for all procurement documentation.</p>
+        </div>
+    </div>
+
+</body>
+</html>

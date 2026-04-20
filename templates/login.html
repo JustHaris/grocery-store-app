@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-5 col-lg-4" data-aos="zoom-in">
+        <div class="dash-card p-5">
+            <div class="text-center mb-5">
+                <i class="bi bi-shield-lock display-4 text-accent mb-3"></i>
+                <h3 class="fw-bold">Security Portal</h3>
+                <p class="text-muted small">Sign in to access your dashboard</p>
+            </div>
+            
+            <form action="{{ url_for('main.login') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label small text-muted text-uppercase">Email Identity</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-envelope"></i></span>
+                        <input type="text" name="username" class="form-control bg-dark border-secondary text-white rounded-end-3" placeholder="Username or Email" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small text-muted text-uppercase">Secure Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-key"></i></span>
+                        <input type="password" name="password" class="form-control bg-dark border-secondary text-white rounded-end-3" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-dash py-3">
+                        Authentication Secure
+                    </button>
+                    <a href="{{ url_for('main.signup') }}" class="btn btn-link btn-sm text-muted text-decoration-none mt-2">
+                        Don't have an account? <span class="text-accent">Register here</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

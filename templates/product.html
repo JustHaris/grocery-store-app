@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="mb-4" data-aos="fade-right">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">Marketplace</a></li>
+            <li class="breadcrumb-item text-muted">{{ product.category.name if product.category else 'General' }}</li>
+            <li class="breadcrumb-item active text-accent" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row g-5">
+    <!-- Product Image Section -->
+    <div class="col-lg-6" data-aos="fade-up">
+        <div class="dash-card p-4 text-center h-100 d-flex align-items-center justify-content-center bg-white">
+            {% if product.image_url %}
+            <img src="{{ url_for('static', filename='images/' + product.image_url) }}" alt="{{ product.name }}" class="img-fluid" style="max-height: 450px; object-fit: contain;">
+            {% else %}
+            <div class="py-5">
+                <i class="bi bi-image text-muted display-1 opacity-25"></i>
+                <p class="text-muted mt-3">No image available</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Info Section -->
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="dash-card h-100 p-5">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-accent bg-opacity-10 text-accent border border-accent border-opacity-25 px-3 py-2 rounded-pill">
+                    {{ product.category.name if product.category else 'General Selection' }}
+                </span>
+                <form action="{{ url_for('main.add_to_wishlist', product_id=product.product_id) }}" method="POST">
+                    <button type="submit" class="wishlist-btn">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <h1 class="fw-bold mb-3 display-5">{{ product.name }}</h1>
+            
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <h2 class="text-accent fw-bold mb-0">Rs. {{ "%.2f"|format(product.price) }}</h2>
+                {% if product.stock > 0 %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                    <i class="bi bi-check-circle-fill me-1"></i> In Stock ({{ product.stock }})
+                </span>
+                {% else %}
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                    <i class="bi bi-x-circle-fill me-1"></i> Out of Stock
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="mb-5">
+                <h5 class="fw-bold mb-3">Description</h5>
+                <p class="text-muted leading-relaxed">
+                    {% if product.description %}
+                        {{ product.description }}
+                    {% else %}
+                        No detailed description available for this premium selection. This item is sourced from our trusted network of suppliers to ensure the highest quality standards.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="d-grid gap-3">
+                <button type="button" class="btn btn-dash w-100 py-3 rounded-3 shadow-lg" onclick="addToCart({{ product.product_id }})" {% if product.stock <= 0 %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus-fill me-2"></i> Add to Procurement Cart
+                </button>
+                <div class="p-3 bg-secondary bg-opacity-10 rounded-3 small text-muted border border-secondary text-center">
+                    <i class="bi bi-shield-check me-2 text-success"></i> Quality Guaranteed & ACID Transaction Secure
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Products -->
+<div class="mt-5 pt-5" data-aos="fade-up">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Related Products</h3>
+        <a href="{{ url_for('main.index', category=product.category_id) }}" class="text-accent text-decoration-none fw-semibold">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        {% for rel in related %}
+        <div class="col">
+            <div class="dash-card h-100 p-0 overflow-hidden product-card">
+                <a href="{{ url_for('main.product_detail', product_id=rel.product_id) }}" class="text-decoration-none">
+                    <div class="product-image-container" style="height: 180px;">
+                        {% if rel.image_url %}
+                        <img src="{{ url_for('static', filename='images/' + rel.image_url) }}" alt="{{ rel.name }}" loading="lazy">
+                        {% else %}
+                        <i class="bi bi-image text-muted fs-1 opacity-25"></i>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="p-4">
+                    <h6 class="fw-bold mb-2 text-truncate text-primary">{{ rel.name }}</h6>
+                    <div class="text-accent fw-bold mb-3">Rs. {{ "%.2f"|format(rel.price) }}</div>
+                        <button type="button" class="btn btn-sm btn-dash-outline w-100" onclick="addToCart({{ rel.product_id }})" {% if rel.stock <= 0 %}disabled{% endif %}>
+                            {% if rel.stock > 0 %}<i class="bi bi-cart-plus"></i> Add{% else %}Out of Stock{% endif %}
+                        </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

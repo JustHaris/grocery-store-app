@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <div>
+        <h2 class="fw-bold mb-1">Administrative Insights</h2>
+        <p class="text-muted small mb-0">Real-time procurement and revenue analytics</p>
+    </div>
+    <div class="text-end">
+        <div class="badge bg-accent bg-opacity-10 text-accent border border-accent border-opacity-25 px-3 py-2">
+            <i class="bi bi-calendar3 me-2"></i> {{ now }}
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-4 mb-4" data-aos="fade-up">
+    <div class="col-md-6 col-xl-3">
+        <div class="dash-card p-4 border-start border-4 border-accent">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-accent bg-opacity-10 rounded-3 text-accent me-3">
+                    <i class="bi bi-currency-dollar fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold">Total Revenue</div>
+                    <h3 class="fw-bold mb-0">Rs. {{ "%.0f"|format(revenue) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dash-card p-4 border-start border-4 border-info">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-info bg-opacity-10 rounded-3 text-info me-3">
+                    <i class="bi bi-cart-check fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold">Total Orders</div>
+                    <h3 class="fw-bold mb-0">{{ orders }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dash-card p-4 border-start border-4 border-primary">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-primary bg-opacity-10 rounded-3 text-primary me-3">
+                    <i class="bi bi-box-seam fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold">Products</div>
+                    <h3 class="fw-bold mb-0">{{ products }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="dash-card p-4 border-start border-4 border-danger">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-danger bg-opacity-10 rounded-3 text-danger me-3">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold">Low Stock</div>
+                    <h3 class="fw-bold mb-0 text-danger">{{ low_stock|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Charts -->
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="dash-card p-4 h-100">
+            <h5 class="fw-bold mb-4">Category Distribution</h5>
+            <div style="height: 300px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Low Stock Alerts -->
+    <div class="col-lg-4" data-aos="fade-left">
+        <div class="dash-card p-4 h-100">
+            <h5 class="fw-bold mb-4 text-danger"><i class="bi bi-bell-fill me-2"></i>Critical Inventory</h5>
+            <div class="list-group list-group-flush bg-transparent">
+                {% if low_stock %}
+                    {% for p in low_stock %}
+                    <div class="list-group-item bg-transparent border-secondary border-opacity-10 px-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-primary">{{ p.name }}</div>
+                                <div class="small text-muted">{{ p.category.name if p.category else 'General' }}</div>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">{{ p.stock }} left</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-check2-circle display-4 text-success opacity-25"></i>
+                        <p class="text-muted mt-3">All inventory levels healthy</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS for Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        const data = {
+            labels: [{% for name, count in cat_dist %}'{{ name }}',{% endfor %}],
+            datasets: [{
+                label: 'Products in Category',
+                data: [{% for name, count in cat_dist %}{{ count }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(0, 168, 107, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 99, 132, 0.6)'
+                ],
+                borderColor: [
+                    '#00a86b',
+                    '#36a2eb',
+                    '#ffce56',
+                    '#4bc1c2',
+                    '#9966ff',
+                    '#ff6384'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#888' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#888' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

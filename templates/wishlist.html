@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-end mb-4" data-aos="fade-up">
+    <div>
+        <h2 class="fw-bold mb-1">My Wishlist</h2>
+        <p class="text-muted mb-0">Saved items that you plan to procure in the future.</p>
+    </div>
+</div>
+
+<div class="dash-card p-4" data-aos="fade-up">
+    {% if items %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        {% for item in items %}
+        <div class="col">
+            <div class="dash-card h-100 p-0 border border-secondary border-opacity-25 overflow-hidden product-card">
+                <div class="position-relative">
+                    <div class="product-image-container" style="height: 150px;">
+                        {% if item.image_url %}
+                        <img src="{{ url_for('static', filename='images/' + item.image_url) }}" alt="{{ item.name }}" loading="lazy">
+                        {% else %}
+                        <i class="bi bi-image text-muted fs-3 opacity-25"></i>
+                        {% endif %}
+                    </div>
+                    <form action="{{ url_for('main.remove_from_wishlist', wishlist_id=item.wishlist_item_id) }}" method="POST" class="position-absolute top-0 end-0 m-2">
+                        <button type="submit" class="btn btn-sm btn-dark bg-opacity-50 rounded-circle border-0" title="Remove from Wishlist">
+                            <i class="bi bi-x-lg text-danger"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="p-3 text-center">
+                    <h6 class="fw-bold text-primary text-truncate mb-1">{{ item.name }}</h6>
+                    <div class="text-accent fw-bold mb-3">Rs. {{ "%.2f"|format(item.price) }}</div>
+                    <form action="{{ url_for('main.add_to_cart', product_id=item.product_id) }}" method="POST">
+                        <button type="submit" class="btn btn-dash w-100 btn-sm py-2" {% if item.stock <= 0 %}disabled{% endif %}>
+                            <i class="bi bi-cart-plus me-1"></i> Move to Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-heart display-1 text-muted opacity-25"></i>
+        <p class="mt-3 text-muted">You haven't saved any items yet.</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-dash px-4 mt-2">Explore Marketplace</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

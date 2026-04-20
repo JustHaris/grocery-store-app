@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Dashboard Header Section -->
+<div class="d-flex justify-content-between align-items-end mb-4" data-aos="fade-up">
+    <div>
+        <h2 class="fw-bold mb-1">Global Marketplace</h2>
+        <p class="text-muted mb-0">Discover premium grocery selections in PKR.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
+            <i class="bi bi-patch-check-fill me-1"></i> Quality Verified
+        </div>
+    </div>
+</div>
+
+<!-- Marketplace Grid Area (Search at Top) -->
+<div id="marketplace-grid" class="row g-4 mt-2">
+    <!-- Filters Header -->
+    <div class="col-12 mb-4" data-aos="fade-up">
+        <div class="dash-card p-3 backdrop-blur">
+            <form method="GET" class="row g-3 align-items-center">
+                <input type="hidden" name="category" value="{{ request.args.get('category', '') }}">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control bg-transparent border-0" name="search" placeholder="Search by product name..." value="{{ request.args.get('search', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="sort" class="form-select bg-transparent border-0">
+                        <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>Sort by Name</option>
+                        <option value="price_low" {% if request.args.get('sort') == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if request.args.get('sort') == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-dash w-100">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hero Promotional Banner -->
+    <div class="col-12">
+        <div class="hero-section mb-5" data-aos="fade-up">
+            <div class="hero-slide active">
+                <img src="{{ url_for('static', filename='images/grocery_banner1.jpg') }}" alt="Promo 1" loading="lazy">
+                <div class="hero-overlay" style="background: linear-gradient(to right, rgba(15,23,42,0.9), rgba(15,23,42,0.2));">
+                    <div class="hero-content text-white">
+                        <span class="badge bg-accent text-dark mb-3">Fresh Arrivals</span>
+                        <h2 class="display-4 fw-bold mb-3">Premium Organic <br> Selection</h2>
+                        <p class="text-secondary mb-4">Directly from the finest local farms to your kitchen.</p>
+                        <a href="#products-list" class="btn btn-dash px-5 py-2">Explore Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="{{ url_for('static', filename='images/grocery_banner2.jpg') }}" alt="Promo 2" loading="lazy">
+                <div class="hero-overlay" style="background: linear-gradient(to right, rgba(15,23,42,0.9), rgba(15,23,42,0.2));">
+                    <div class="hero-content text-white">
+                        <span class="badge bg-info text-dark mb-3">Flash Sale</span>
+                        <h2 class="display-4 fw-bold mb-3">Weekly Deals <br> Up to 40% OFF</h2>
+                        <p class="text-secondary mb-4">Limited time offer on all dairy and bakery items.</p>
+                        <a href="#products-list" class="btn btn-dash px-5 py-2">Grab Deals</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Horizontal Explorer -->
+    <div class="col-12 mb-5" data-aos="fade-up">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Browse Departments</h5>
+            <div class="text-muted small">Scroll to explore <i class="bi bi-arrow-right"></i></div>
+        </div>
+        <div class="category-slider">
+            <a href="{{ url_for('main.index') }}" class="category-card {{ 'active' if not request.args.get('category') }}">
+                <div class="category-icon-wrapper">
+                    <i class="bi bi-grid fs-3"></i>
+                </div>
+                <span class="fw-bold">All Items</span>
+            </a>
+            {% for c in categories %}
+            <a href="{{ url_for('main.index', category=c.category_id, search=request.args.get('search', ''), sort=request.args.get('sort', '')) }}" 
+               class="category-card {{ 'active' if request.args.get('category') == c.category_id|string }}">
+                {% if c.image_url %}
+                <img src="{{ url_for('static', filename='images/' + c.image_url) }}" alt="{{ c.name }}" loading="lazy">
+                {% else %}
+                <div class="category-icon-wrapper">
+                    <i class="bi bi-tag fs-3"></i>
+                </div>
+                {% endif %}
+                <span class="fw-bold">{{ c.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Products Loop -->
+    <div id="products-list" class="mt-4">
+
+        {% for product in products %}
+        <div data-aos="fade-up">
+
+            <div class="dash-card h-100 p-0 overflow-hidden product-card">
+                <div class="position-relative">
+                    <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}">
+                        <div class="product-image-container">
+                            {% if product.image_url %}
+                            <img src="{{ url_for('static', filename='images/' + product.image_url) }}" alt="{{ product.name }}" loading="lazy">
+                            {% else %}
+                            <i class="bi bi-image text-muted fs-1 opacity-25"></i>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <!-- Premium Badges -->
+                    <div class="position-absolute top-0 start-0 m-3 d-flex flex-column gap-2">
+                        {% if product.stock < 10 and product.stock > 0 %}
+                        <span class="badge bg-warning text-dark shadow-sm">Low Stock</span>
+                        {% endif %}
+                        {% if loop.index % 3 == 0 %}
+                        <span class="badge bg-danger shadow-sm">15% OFF</span>
+                        {% endif %}
+                    </div>
+                    
+                    <form action="{{ url_for('main.add_to_wishlist', product_id=product.product_id) }}" method="POST" class="position-absolute top-0 end-0 m-3">
+                        <button type="submit" class="wishlist-btn">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="p-4">
+                    <div class="text-muted small mb-1">{{ product.category.name if product.category else 'General' }}</div>
+                    <h6 class="fw-bold mb-2 text-truncate" title="{{ product.name }}">
+                        <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="text-decoration-none text-primary">{{ product.name }}</a>
+                    </h6>
+                    
+                    <div class="d-flex align-items-baseline gap-2 mb-3">
+                        <span class="h5 fw-bold text-accent mb-0">Rs. {{ "%.0f"|format(product.price) }}</span>
+                        {% if loop.index % 3 == 0 %}
+                        <span class="text-muted text-decoration-line-through small">Rs. {{ "%.0f"|format(product.price|float * 1.15) }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-dash-outline w-100 py-2" onclick="addToCart({{ product.product_id }})" {% if product.stock <= 0 %}disabled{% endif %}>
+                            <i class="bi bi-cart-plus me-2"></i>{% if product.stock > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="dash-card p-5 border-dashed">
+                <i class="bi bi-search display-1 text-muted opacity-25"></i>
+                <h4 class="mt-4 text-muted">No items found matching your search</h4>
+                <p class="text-secondary">Try adjusting your filters or search keywords.</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-dash rounded-pill px-4 mt-3">Reset Filters</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

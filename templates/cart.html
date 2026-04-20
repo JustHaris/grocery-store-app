@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Cart Header -->
+<div class="d-flex justify-content-between align-items-end mb-4" data-aos="fade-up">
+    <div>
+        <h2 class="fw-bold mb-1">Shopping Cart</h2>
+        <p class="text-muted mb-0">Review your selected items and proceed to secure checkout.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="dash-card p-0 overflow-hidden">
+            <div class="p-4 border-bottom border-secondary">
+                <h5 class="fw-bold mb-0">Selected Items</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table dash-table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th class="text-end pe-4">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        {% if item.image_url %}
+                                        <img src="{{ url_for('static', filename='images/' + item.image_url) }}" class="rounded-2 me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary bg-opacity-10 rounded-2 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-semibold">{{ item.name }}</div>
+                                            <div class="small text-muted d-md-none">Rs. {{ "%.2f"|format(item.price) }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">Rs. {{ "%.2f"|format(item.price) }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <form action="{{ url_for('main.update_cart', product_id=item.product_id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="decrease">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary border-0"><i class="bi bi-dash-lg"></i></button>
+                                        </form>
+                                        <span class="badge bg-secondary bg-opacity-10 text-primary border border-secondary px-3 py-2">
+                                            {{ item.quantity }}
+                                        </span>
+                                        <form action="{{ url_for('main.update_cart', product_id=item.product_id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="increase">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary border-0"><i class="bi bi-plus-lg"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="fw-bold text-accent">Rs. {{ "%.2f"|format(item.subtotal) }}</div>
+                                    <form action="{{ url_for('main.remove_from_cart', product_id=item.product_id) }}" method="POST" class="mt-1">
+                                        <button type="submit" class="btn btn-link btn-sm text-danger text-decoration-none p-0">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-cart-x display-1 text-muted opacity-25"></i>
+                    <p class="mt-3 text-muted">Your cart is currently empty.</p>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-dash px-4 mt-2">Start Procuring</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4" data-aos="fade-up">
+        <div class="dash-card sticky-top" style="top: 90px; z-index: 10;">
+            <h5 class="fw-bold mb-4">Investment Summary</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Subtotal</span>
+                <span class="fw-bold">Rs. {{ "%.2f"|format(total) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-4">
+                <span class="text-muted">Procurement Fee</span>
+                <span class="text-success fw-bold">FREE</span>
+            </div>
+            <hr class="border-secondary opacity-25">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Grand Total</h5>
+                <h4 class="fw-bold text-accent mb-0">Rs. {{ "%.2f"|format(total) }}</h4>
+            </div>
+            
+            {% if items %}
+            <form action="{{ url_for('main.checkout') }}" method="POST">
+                <button type="submit" class="btn btn-dash w-100 py-3 rounded-3 mb-3">
+                    <i class="bi bi-shield-lock-fill me-2"></i> Finalize Procurement
+                </button>
+            </form>
+            <div class="p-3 bg-secondary bg-opacity-10 rounded-3 small text-muted border border-secondary">
+                <i class="bi bi-shield-check me-2 text-success"></i> Transaction secured via automated database triggers.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

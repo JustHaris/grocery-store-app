@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Admin Header -->
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-up">
+    <div>
+        <h2 class="fw-bold mb-1">Inventory Management</h2>
+        <p class="text-muted mb-0">Monitor stock levels and manage your product catalog.</p>
+    </div>
+    <button type="button" class="btn btn-dash px-4" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        <i class="bi bi-plus-lg me-2"></i> Add New Product
+    </button>
+</div>
+
+<!-- Stats Overview -->
+<div class="row g-4 mb-4" data-aos="fade-up">
+    <div class="col-md-4">
+        <div class="dash-card">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-primary-subtle rounded-3 me-3">
+                    <i class="bi bi-box-seam text-primary fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Total Products</div>
+                    <h3 class="fw-bold mb-0">{{ products|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-card">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-warning-subtle rounded-3 me-3">
+                    <i class="bi bi-exclamation-triangle text-warning fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Low Stock Alert</div>
+                    {% set low_stock = products|selectattr('stock', 'le', 10)|list|length %}
+                    <h3 class="fw-bold mb-0">{{ low_stock }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-card">
+            <div class="d-flex align-items-center">
+                <div class="p-3 bg-success-subtle rounded-3 me-3">
+                    <i class="bi bi-currency-dollar text-success fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Avg. Price</div>
+                    {% set total_price = products|sum(attribute='price') %}
+                    {% set avg_price = total_price / products|length if products|length > 0 else 0 %}
+                    <h3 class="fw-bold mb-0">Rs. {{ "%.2f"|format(avg_price) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="dash-card p-0 overflow-hidden" data-aos="fade-up">
+    <div class="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Live Inventory</h5>
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-sm btn-dash-outline">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+            <div class="input-group w-auto">
+                <input type="text" id="adminSearch" class="form-control form-control-sm" placeholder="Search inventory..." onkeyup="filterInventory()">
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table dash-table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if p.image_url %}
+                            <img src="{{ url_for('static', filename='images/' + p.image_url) }}" class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-secondary bg-opacity-10 rounded-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <span class="fw-semibold">{{ p.name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary bg-opacity-10 text-muted border border-secondary">
+                            {{ p.category.name if p.category else 'N/A' }}
+                        </span>
+                    </td>
+                    <td class="fw-bold text-accent">Rs. {{ "%.2f"|format(p.price) }}</td>
+                    <td>
+                        <div class="d-flex align-items-center" style="width: 120px;">
+                            <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                {% set stock_val = p.stock if p.stock < 100 else 100 %}
+                                <div class="progress-bar {% if p.stock < 10 %}bg-danger{% elif p.stock < 30 %}bg-warning{% else %}bg-success{% endif %}"
+                                     role="progressbar" style="width: {{ stock_val }}%">
+                                </div>
+                            </div>
+                            <span class="small">{{ p.stock }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <!-- Edit button — data stored in data-* attrs to avoid quoting conflicts -->
+                            <button class="btn btn-sm btn-outline-info btn-edit-product"
+                                data-id="{{ p.product_id }}"
+                                data-name="{{ p.name | e }}"
+                                data-description="{{ (p.description or '') | e }}"
+                                data-image="{{ (p.image_url or '') | e }}"
+                                data-category="{{ p.category_id or 0 }}"
+                                data-price="{{ p.price }}"
+                                data-stock="{{ p.stock }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <!-- Delete button -->
+                            <button class="btn btn-sm btn-outline-danger btn-delete-product"
+                                data-id="{{ p.product_id }}"
+                                data-name="{{ p.name | e }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SHARED EDIT PRODUCT MODAL — lives at body level, not in table -->
+<!-- ============================================================ -->
+<div class="modal fade" id="sharedEditProductModal" tabindex="-1" aria-labelledby="editModalLabel" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="editModalLabel">Edit Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProductForm" method="POST" action="">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Product Title</label>
+                        <input type="text" id="edit_name" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Description</label>
+                        <textarea id="edit_description" name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Asset / Image Filename</label>
+                        <input type="text" id="edit_image_url" name="image_url" class="form-control" placeholder="e.g. apple.jpg">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold text-uppercase">Category</label>
+                            <select id="edit_category_id" name="category_id" class="form-select" required>
+                                {% for c in categories %}
+                                <option value="{{ c.category_id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold text-uppercase">Price (PKR)</label>
+                            <input type="number" step="0.01" id="edit_price" name="price" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-uppercase">Inventory Stock</label>
+                        <input type="number" id="edit_stock" name="stock" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold">
+                        <i class="bi bi-save me-2"></i>Update Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- SHARED DELETE PRODUCT MODAL — lives at body level -->
+<!-- ============================================================ -->
+<div class="modal fade" id="sharedDeleteProductModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-exclamation-triangle-fill text-danger display-4 mb-3 d-block"></i>
+                <p class="mb-1">Are you sure you want to delete</p>
+                <p class="fw-bold fs-5" id="deleteProductName"></p>
+                <p class="text-muted small">This action cannot be undone if the product has no order history.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteProductForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">
+                        <i class="bi bi-trash me-2"></i>Delete Permanently
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Product Modal (already at body level — this one was fine) -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addModalLabel" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addModalLabel">Register New Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.add_product') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Product Title</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Organic Apples" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Detailed product description..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-uppercase">Asset / Image Filename</label>
+                        <input type="text" name="image_url" class="form-control" placeholder="apple.jpg">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold text-uppercase">Category</label>
+                            <select name="category_id" class="form-select" required>
+                                {% for c in categories %}
+                                <option value="{{ c.category_id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold text-uppercase">Price (PKR)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold text-uppercase">Initial Inventory Stock</label>
+                        <input type="number" name="stock" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold">
+                        <i class="bi bi-plus-lg me-2"></i>Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- JS: Populate and open shared modals via event delegation on data-* attributes -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Edit Product Buttons
+    document.querySelectorAll('.btn-edit-product').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id          = this.dataset.id;
+            var name        = this.dataset.name;
+            var description = this.dataset.description;
+            var imageUrl    = this.dataset.image;
+            var categoryId  = parseInt(this.dataset.category);
+            var price       = this.dataset.price;
+            var stock       = this.dataset.stock;
+
+            // Set form action
+            document.getElementById('editProductForm').action = '/admin/edit_product/' + id;
+
+            // Populate fields
+            document.getElementById('editModalLabel').textContent = 'Edit Product: ' + name;
+            document.getElementById('edit_name').value        = name;
+            document.getElementById('edit_description').value = description;
+            document.getElementById('edit_image_url').value   = imageUrl;
+            document.getElementById('edit_price').value       = price;
+            document.getElementById('edit_stock').value       = stock;
+
+            // Set correct category
+            var select = document.getElementById('edit_category_id');
+            for (var i = 0; i < select.options.length; i++) {
+                select.options[i].selected = (parseInt(select.options[i].value) === categoryId);
+            }
+
+            // Show modal
+            var modal = new bootstrap.Modal(document.getElementById('sharedEditProductModal'));
+            modal.show();
+        });
+    });
+
+    // Delete Product Buttons
+    document.querySelectorAll('.btn-delete-product').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id   = this.dataset.id;
+            var name = this.dataset.name;
+
+            document.getElementById('deleteProductName').textContent = name;
+            document.getElementById('deleteProductForm').action = '/admin/delete_product/' + id;
+
+            var modal = new bootstrap.Modal(document.getElementById('sharedDeleteProductModal'));
+            modal.show();
+        });
+    });
+
+});
+</script>
+
+{% endblock %}
