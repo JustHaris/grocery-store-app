@@ -100,7 +100,7 @@
                     </div>
                 </a>
                 <div class="p-4">
-                    <h6 class="fw-bold mb-2 text-truncate text-white">{{ rel.name }}</h6>
+                    <h6 class="fw-bold mb-2 text-truncate text-theme">{{ rel.name }}</h6>
                     <div class="text-accent fw-bold mb-3">Rs. {{ "%.2f"|format(rel.price) }}</div>
                     <form action="{{ url_for('main.add_to_cart', product_id=rel.product_id) }}" method="POST">
                         <button type="submit" class="btn btn-dash-outline w-100 py-2 btn-sm" {% if rel.stock <= 0 %}disabled{% endif %}>

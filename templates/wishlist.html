@@ -29,7 +29,7 @@
                     </form>
                 </div>
                 <div class="p-3 text-center">
-                    <h6 class="fw-bold text-white text-truncate mb-1">{{ item.name }}</h6>
+                    <h6 class="fw-bold text-theme text-truncate mb-1">{{ item.name }}</h6>
                     <div class="text-accent fw-bold mb-3">Rs. {{ "%.2f"|format(item.price) }}</div>
                     <form action="{{ url_for('main.add_to_cart', product_id=item.product_id) }}" method="POST">
                         <button type="submit" class="btn btn-dash w-100 btn-sm py-2" {% if item.stock <= 0 %}disabled{% endif %}>

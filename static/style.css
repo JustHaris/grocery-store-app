@@ -534,6 +534,30 @@ body {
     color: var(--text-secondary) !important;
 }
 
+.text-theme {
+    color: var(--text-primary) !important;
+}
+
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.bg-accent {
+    background-color: var(--accent) !important;
+}
+
+.bg-accent.bg-opacity-10 {
+    background-color: var(--accent-glow) !important;
+}
+
+.border-accent {
+    border-color: var(--accent) !important;
+}
+
+.border-accent.border-opacity-25 {
+    border-color: color-mix(in srgb, var(--accent) 25%, transparent) !important;
+}
+
 /* Theme Specific Tweaks */
 :root {
     --close-btn-filter: invert(1) grayscale(100%) brightness(200%);
